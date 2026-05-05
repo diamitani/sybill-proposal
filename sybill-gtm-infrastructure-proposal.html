@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="slides-format" content="viewport" />
+  <title>Sybill GTM Infrastructure Proposal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style type="text/tailwindcss">
+    @theme {
+      --color-bg: #071417;
+      --color-bg-deep: #041014;
+      --color-surface: #0d2024;
+      --color-text: #ecfffb;
+      --color-text-secondary: #b7d8d1;
+      --color-text-muted: #7fa5a1;
+      --color-accent-1: #1dd4c3;
+      --color-accent-2: #82f7d7;
+      --color-accent-3: #0ea5a4;
+      --color-glass-bg: rgba(255,255,255,0.06);
+      --color-glass-border: rgba(255,255,255,0.09);
+      --color-vignette: rgba(0,0,0,0.35);
+      --font-display: 'Manrope', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+    }
+  </style>
+  <style>
+    :root { --color-bg: #071417; --color-text: #ecfffb; --glow-color-rgb: 29,212,195; }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { background: var(--color-bg); margin: 0; }
+    body { font-family: var(--font-body); color: var(--color-text); overflow: hidden; height: 100vh; width: 100vw; }
+    .deck { width: 100vw; height: 100vh; position: relative; }
+    .slide { position: absolute; inset: 0; background: var(--color-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transform: scale(0.96); transition: opacity .7s ease, transform .7s ease; pointer-events: none; overflow: hidden; }
+    .slide.active { opacity: 1; transform: scale(1); pointer-events: all; }
+    .slide > .content { position: relative; z-index: 2; width: 100%; max-width: 1180px; padding: clamp(1.5rem, 4vw, 4rem); }
+    .nav-controls { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); display:flex; align-items:center; gap:16px; z-index:100; background: var(--color-glass-bg); backdrop-filter: blur(10px); padding:10px 24px; border-radius:40px; border:1px solid var(--color-glass-border); }
+    .nav-btn { width:40px; height:40px; border:none; background:var(--color-glass-bg); color:var(--color-accent-1); border-radius:9999px; cursor:pointer; }
+    .slide-dots { display:flex; gap:8px; }
+    .dot { width:10px; height:10px; border-radius:50%; background: var(--color-glass-border); cursor:pointer; transition:.3s; }
+    .dot.active { background: var(--color-accent-1); transform: scale(1.25); }
+    .slide-counter { color: var(--color-text-muted); font-size: .85rem; min-width: 42px; text-align:center; }
+    .reveal { opacity: 0; transform: translateY(20px); }
+    .gradient-mesh { position:absolute; inset:0; z-index:0; overflow:hidden; pointer-events:none; }
+    .blob { position:absolute; border-radius:50%; filter: blur(80px); animation: float-slow 12s ease-in-out infinite; }
+    .blob:nth-child(2){ animation: float-drift 15s ease-in-out infinite; }
+    .blob:nth-child(3){ animation: float-slow 18s ease-in-out infinite reverse; }
+    @keyframes float-slow { 0%{transform:translate(0,0) scale(1)} 25%{transform:translate(60px,-50px) scale(1.12)} 50%{transform:translate(-40px,40px) scale(.9)} 75%{transform:translate(50px,20px) scale(1.08)} 100%{transform:translate(0,0) scale(1)} }
+    @keyframes float-drift { 0%{transform:translate(0,0) scale(1)} 33%{transform:translate(-50px,-60px) scale(1.12)} 66%{transform:translate(40px,30px) scale(.88)} 100%{transform:translate(0,0) scale(1)} }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-15px)} }
+    .slide::before { content:''; position:absolute; inset:0; z-index:1; pointer-events:none; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"); background-size:256px 256px; opacity:.03; mix-blend-mode: overlay; }
+    .slide::after { content:''; position:absolute; inset:0; z-index:1; pointer-events:none; background: radial-gradient(ellipse at center, transparent 50%, var(--color-vignette) 100%); }
+    .metric-card { background: var(--color-glass-bg); border:1px solid var(--color-glass-border); backdrop-filter: blur(14px); border-radius: 24px; padding: 1.4rem; }
+    .process-step { background: linear-gradient(180deg, rgba(29,212,195,.12), rgba(255,255,255,.03)); border:1px solid rgba(29,212,195,.18); border-radius: 22px; padding: 1rem; }
+    .label { letter-spacing: .14em; text-transform: uppercase; color: var(--color-text-muted); font-size: .8rem; }
+    .tiny { font-size: .82rem; color: var(--color-text-muted); }
+    .bar-track { background: rgba(255,255,255,.08); border-radius:9999px; height: 18px; overflow:hidden; }
+    .bar-fill { height:100%; border-radius:9999px; background: linear-gradient(90deg, var(--color-accent-1), var(--color-accent-2)); width:0; }
+    .timeline-line { position:absolute; left: 18px; top: 10px; bottom: 10px; width:2px; background: linear-gradient(180deg, var(--color-accent-1), transparent); }
+    .timeline-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--color-accent-1); box-shadow: 0 0 18px rgba(29,212,195,.7); }
+    @media (prefers-reduced-motion: reduce){ *,*::before,*::after{animation-duration:.01ms !important; transition-duration:.2s !important;} }
+  </style>
+</head>
+<body>
+<div class="mouse-spotlight" style="position:fixed;inset:0;z-index:99;pointer-events:none;"></div>
+<div class="deck">
+  <div class="slide active" data-slide="1">
+    <div class="gradient-mesh">
+      <div class="blob" style="width:480px;height:480px;top:-120px;right:-80px;background:var(--color-accent-1);opacity:.15"></div>
+      <div class="blob" style="width:300px;height:300px;bottom:-80px;left:-50px;background:var(--color-accent-2);opacity:.12"></div>
+      <div class="blob" style="width:220px;height:220px;top:42%;left:14%;background:var(--color-accent-3);opacity:.12"></div>
+    </div>
+    <canvas class="particle-canvas" style="position:absolute;inset:0;z-index:1"></canvas>
+    <div class="content text-center">
+      <div class="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-[28px] border border-white/10 bg-white/5 text-4xl font-black text-accent-1 animate-[float_3s_ease-in-out_infinite]">S</div>
+      <p class="reveal mb-3 text-sm uppercase tracking-[0.35em] text-text-muted">Sybill x GTM Infrastructure</p>
+      <h1 class="reveal mx-auto max-w-5xl bg-linear-to-br from-accent-1 via-accent-2 to-accent-1 bg-clip-text text-[clamp(2.6rem,6vw,5.4rem)] font-extrabold tracking-tight text-transparent">One-Month GTM Architecture Buildout</h1>
+      <p class="reveal mx-auto mt-5 max-w-3xl text-[clamp(1rem,1.8vw,1.35rem)] text-text-secondary">Build the sales system Sybill needs now: outbound automation, inbound routing, sales process, messaging, reporting, and post-call execution.</p>
+      <div class="reveal mt-10 flex justify-center gap-6 text-left">
+        <div class="metric-card w-[220px]"><div class="label">Engagement</div><div class="mt-2 text-3xl font-extrabold">30 days</div><div class="tiny mt-2">Operator-led implementation sprint</div></div>
+        <div class="metric-card w-[220px]"><div class="label">Primary outcome</div><div class="mt-2 text-3xl font-extrabold">1 repeatable engine</div><div class="tiny mt-2">From lead intake to rep execution</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-slide="2">
+    <div class="gradient-mesh"><div class="blob" style="width:350px;height:350px;top:-70px;right:-60px;background:var(--color-accent-1);opacity:.09"></div><div class="blob" style="width:240px;height:240px;bottom:-50px;left:-30px;background:var(--color-accent-2);opacity:.07"></div></div>
+    <div class="content">
+      <p class="label reveal mb-3">Why now</p>
+      <h2 class="reveal text-[clamp(2rem,4vw,3.3rem)] font-extrabold">Sybill has product pull and growth, but the sales operating system is still forming.</h2>
+      <div class="mt-8 grid grid-cols-4 gap-5">
+        <div class="metric-card reveal"><div class="label">Scale signal</div><div class="mt-2 text-4xl font-extrabold">$100K → $1M</div><p class="mt-2 text-sm text-text-secondary">ARR grew from $100K to $1M in 9 months after its pivot to AI copilot for sales.</p></div>
+        <div class="metric-card reveal"><div class="label">Funding</div><div class="mt-2 text-4xl font-extrabold">$11M Series A</div><p class="mt-2 text-sm text-text-secondary">Capital was raised in July 2024 to expand the AI sales assistant platform.</p></div>
+        <div class="metric-card reveal"><div class="label">Customer base</div><div class="mt-2 text-4xl font-extrabold">750+</div><p class="mt-2 text-sm text-text-secondary">Sybill describes a fast-growing installed base and strong word-of-mouth motion.</p></div>
+        <div class="metric-card reveal"><div class="label">Team implication</div><div class="mt-2 text-4xl font-extrabold">Build process now</div><p class="mt-2 text-sm text-text-secondary">With a small sales team, process debt compounds quickly unless systems are standardized.</p></div>
+      </div>
+      <div class="reveal mt-8 rounded-[24px] border border-white/10 bg-white/5 p-6 text-lg text-text-secondary">This proposal turns Sybill's current sales effort into an instrumented GTM machine: clear ICPs, clear messaging, one outbound engine, one inbound engine, and one post-call engine.</div>
+    </div>
+  </div>
+
+  <div class="slide" data-slide="3">
+    <div class="gradient-mesh"><div class="blob" style="width:320px;height:320px;top:-80px;right:-40px;background:var(--color-accent-3);opacity:.1"></div><div class="blob" style="width:220px;height:220px;bottom:-40px;left:-20px;background:var(--color-accent-2);opacity:.06"></div></div>
+    <div class="content">
+      <p class="label reveal mb-3">Current-state diagnosis</p>
+      <h2 class="reveal text-[clamp(2rem,4vw,3rem)] font-extrabold">The gap is not tools. The gap is orchestration.</h2>
+      <div class="mt-8 grid grid-cols-2 gap-6">
+        <div class="metric-card reveal">
+          <h3 class="text-2xl font-bold">What exists</h3>
+          <ul class="mt-4 space-y-3 text-text-secondary text-lg">
+            <li>Product-market momentum and compelling AI positioning.</li>
+            <li>Small sales pod with roughly 1 SDR and a handful of closers/AEs.</li>
+            <li>Strong product narrative around revenue memory, AI follow-up, CRM autofill, and execution.</li>
+            <li>Modern GTM tools available or easy to connect: Clay, n8n, HubSpot/CRM, outreach tools, enrichment APIs.</li>
+          </ul>
+        </div>
+        <div class="metric-card reveal">
+          <h3 class="text-2xl font-bold">What is missing</h3>
+          <ul class="mt-4 space-y-3 text-text-secondary text-lg">
+            <li>No unified sales process from targeting to booked meeting to follow-up.</li>
+            <li>No locked ICP hierarchy, persona rules, or messaging library by segment.</li>
+            <li>No standardized automation workflow for prospecting, inbound triage, or post-call actioning.</li>
+            <li>No reporting layer that lets founders inspect throughput, quality, and failure points daily.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-slide="4">
+    <div class="gradient-mesh"><div class="blob" style="width:360px;height:360px;top:-90px;right:-70px;background:var(--color-accent-1);opacity:.1"></div><div class="blob" style="width:260px;height:260px;bottom:-70px;left:-50px;background:var(--color-accent-2);opacity:.07"></div></div>
+    <canvas class="particle-canvas-ambient" style="position:absolute;inset:0;z-index:1"></canvas>
+    <div class="content">
+      <p class="label reveal mb-3">Deliverables</p>
+      <h2 class="reveal text-[clamp(2rem,4vw,3rem)] font-extrabold">Three automation systems + the operating layer that makes them usable.</h2>
+      <div class="mt-8 grid grid-cols-3 gap-6">
+        <div class="process-step reveal"><div class="label">01</div><h3 class="mt-3 text-2xl font-bold">Prospect outbound automation</h3><p class="mt-3 text-text-secondary">Lead input → enrichment → account research → persona mapping → AI draft → sequence enrollment → reporting.</p></div>
+        <div class="process-step reveal"><div class="label">02</div><h3 class="mt-3 text-2xl font-bold">Prospect inbound automation</h3><p class="mt-3 text-text-secondary">Form intake → intent classification → routing → CRM updates → first response draft → owner assignment → SLA tracking.</p></div>
+        <div class="process-step reveal"><div class="label">03</div><h3 class="mt-3 text-2xl font-bold">Post-sales-call automation</h3><p class="mt-3 text-text-secondary">Call event → summary → MEDDPICC/BANT fielding → next-step tasking → follow-up email draft → manager visibility.</p></div>
+      </div>
+      <div class="mt-8 grid grid-cols-2 gap-6">
+        <div class="metric-card reveal"><h3 class="text-xl font-bold">Strategic layer</h3><p class="mt-2 text-text-secondary">ICPs, buyer personas, unique value proposition framing, sales playbook, messaging guidelines, prompts, and sequence strategy.</p></div>
+        <div class="metric-card reveal"><h3 class="text-xl font-bold">Systems layer</h3><p class="mt-2 text-text-secondary">CRM fields, routing rules, domains and inbox warm-up plan, tool integrations, dashboards, QA rules, and ownership model.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-slide="5">
+    <div class="gradient-mesh"><div class="blob" style="width:320px;height:320px;top:-60px;right:-50px;background:var(--color-accent-1);opacity:.09"></div><div class="blob" style="width:260px;height:260px;bottom:-60px;left:-40px;background:var(--color-accent-3);opacity:.06"></div></div>
+    <div class="content">
+      <p class="label reveal mb-3">Outbound architecture</p>
+      <h2 class="reveal text-[clamp(2rem,4vw,3rem)] font-extrabold">Prospect outbound automation workflow</h2>
+      <div class="mt-8 grid grid-cols-6 gap-4 text-sm">
+        <div class="process-step reveal"><div class="label">Step 1</div><h3 class="mt-2 text-lg font-bold">Lead feed</h3><p class="mt-2 text-text-secondary">Upload target accounts or trigger from intent, lists, or CRM views.</p></div>
+        <div class="process-step reveal"><div class="label">Step 2</div><h3 class="mt-2 text-lg font-bold">Clay enrichment</h3><p class="mt-2 text-text-secondary">Find contacts, titles, emails, firmographics, signals, and account metadata.</p></div>
+        <div class="process-step reveal"><div class="label">Step 3</div><h3 class="mt-2 text-lg font-bold">Research agent</h3><p class="mt-2 text-text-secondary">Build account brief, likely pain points, recent trigger events, and relevance angle.</p></div>
+        <div class="process-step reveal"><div class="label">Step 4</div><h3 class="mt-2 text-lg font-bold">Messaging agent</h3><p class="mt-2 text-text-secondary">Draft email variant based on ICP, persona, proof point, and CTA rule.</p></div>
+        <div class="process-step reveal"><div class="label">Step 5</div><h3 class="mt-2 text-lg font-bold">Send / sequence</h3><p class="mt-2 text-text-secondary">Push to outreach platform or send through workflow with guardrails.</p></div>
+        <div class="process-step reveal"><div class="label">Step 6</div><h3 class="mt-2 text-lg font-bold">Track + report</h3><p class="mt-2 text-text-secondary">Sync status, replies, meetings, bounce rate, and workflow health back to dashboard.</p></div>
+      </div>
+      <div class="reveal mt-8 rounded-[24px] border border-[#1dd4c333] bg-[#1dd4c311] p-6 text-lg text-text-secondary">Core Phase 1 build: one production-grade email automation that starts with leads and ends with a personalized draft ready for sequence enrollment.</div>
+    </div>
+  </div>
+
+  <div class="slide" data-slide="6">
+    <div class="gradient-mesh"><div class="blob" style="width:300px;height:300px;top:-60px;right:-60px;background:var(--color-accent-2);opacity:.08"></div><div class="blob" style="width:230px;height:230px;bottom:-50px;left:-30px;background:var(--color-accent-1);opacity:.06"></div></div>
+    <div class="content">
+      <p class="label reveal mb-3">Inbound architecture</p>
+      <h2 class="reveal text-[clamp(2rem,4vw,3rem)] font-extrabold">Prospect inbound automation workflow</h2>
+      <div class="mt-8 grid grid-cols-2 gap-6">
+        <div class="metric-card reveal">
+          <h3 class="text-2xl font-bold">Modeled on proven inbound triage systems</h3>
+          <p class="mt-3 text-text-secondary">The Atlas case study in this project shows a working pattern: form intake, AI intent classification, CRM correction logic, and same-second personalized draft response.</p>
+          <ul class="mt-4 space-y-3 text-lg text-text-secondary">
+            <li>Capture every inbound form with webhook reliability.</li>
+            <li>Classify real intent from free-text message, not just dropdown selection.</li>
+            <li>Write clean CRM state only when correction is needed.</li>
+            <li>Draft the first response in brand-safe tone with routing context.</li>
+          </ul>
+        </div>
+        <div class="metric-card reveal">
+          <h3 class="text-2xl font-bold">Sybill-specific application</h3>
+          <ul class="mt-4 space-y-3 text-lg text-text-secondary">
+            <li>Route by buyer type: AE leader, RevOps, sales manager, founder-led sales, CS.</li>
+            <li>Separate demo intent from partnerships, support, candidate, and general inbound.</li>
+            <li>Auto-assign owner, SLA, lifecycle stage, and follow-up status.</li>
+            <li>Push response draft into CRM and notify the right rep instantly.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-slide="7">
+    <div class="gradient-mesh"><div class="blob" style="width:330px;height:330px;top:-70px;right:-50px;background:var(--color-accent-1);opacity:.08"></div><div class="blob" style="width:250px;height:250px;bottom:-40px;left:-30px;background:var(--color-accent-2);opacity:.06"></div></div>
+    <div class="content">
+      <p class="label reveal mb-3">Post-call architecture</p>
+      <h2 class="reveal text-[clamp(2rem,4vw,3rem)] font-extrabold">Post-sales-call automation workflow</h2>
+      <div class="mt-8 grid grid-cols-3 gap-6">
+        <div class="metric-card reveal"><h3 class="text-xl font-bold">Capture</h3><p class="mt-3 text-text-secondary">Meeting event or recording triggers a workflow to ingest transcript, participants, deal context, and CRM record.</p></div>
+        <div class="metric-card reveal"><h3 class="text-xl font-bold">Structure</h3><p class="mt-3 text-text-secondary">AI extracts summary, action items, blockers, MEDDPICC/BANT notes, next meeting, risks, and buying signals.</p></div>
+        <div class="metric-card reveal"><h3 class="text-xl font-bold">Execute</h3><p class="mt-3 text-text-secondary">Send follow-up draft, update CRM, open tasks, notify manager, and log enablement insights for reuse.</p></div>
+      </div>
+      <div class="mt-8 grid grid-cols-2 gap-6">
+        <div class="process-step reveal"><h3 class="text-xl font-bold">Why this matters for Sybill</h3><p class="mt-3 text-text-secondary">Sybill's own product story is about turning context into action. The internal sales process should mirror that promise and become a live proof point.</p></div>
+        <div class="process-step reveal"><h3 class="text-xl font-bold">Operational result</h3><p class="mt-3 text-text-secondary">Every call ends with the same standard of execution, not a rep-by-rep memory test.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-slide="8">
+    <div class="gradient-mesh"><div class="blob" style="width:340px;height:340px;top:-80px;right:-60px;background:var(--color-accent-3);opacity:.09"></div><div class="blob" style="width:220px;height:220px;bottom:-40px;left:-20px;background:var(--color-accent-2);opacity:.06"></div></div>
+    <div class="content">
+      <p class="label reveal mb-3">Strategy assets</p>
+      <h2 class="reveal text-[clamp(2rem,4vw,3rem)] font-extrabold">The strategic foundation built in parallel</h2>
+      <div class="mt-8 grid grid-cols-3 gap-5">
+        <div class="metric-card reveal"><h3 class="text-xl font-bold">ICP design</h3><p class="mt-3 text-text-secondary">Define segment hierarchy, buying triggers, qualification rules, exclusions, and priority scoring.</p></div>
+        <div class="metric-card reveal"><h3 class="text-xl font-bold">Personas</h3><p class="mt-3 text-text-secondary">Map pains, motivations, objections, goals, and proof points for each buyer role.</p></div>
+        <div class="metric-card reveal"><h3 class="text-xl font-bold">USP framing</h3><p class="mt-3 text-text-secondary">Translate Sybill from “AI note taker” to “revenue memory + execution layer” with sharper contrast.</p></div>
+        <div class="metric-card reveal"><h3 class="text-xl font-bold">Messaging rules</h3><p class="mt-3 text-text-secondary">Create email frameworks, CTA logic, tone controls, and personalization boundaries by ICP.</p></div>
+        <div class="metric-card reveal"><h3 class="text-xl font-bold">Sales playbook</h3><p class="mt-3 text-text-secondary">Document stages, handoffs, talk tracks, qualification standards, follow-up SLAs, and rep behaviors.</p></div>
+        <div class="metric-card reveal"><h3 class="text-xl font-bold">Prompt library</h3><p class="mt-3 text-text-secondary">Research prompt, email prompt, call-summary prompt, and QA prompt for reliable outputs.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-slide="9">
+    <div class="gradient-mesh"><div class="blob" style="width:320px;height:320px;top:-70px;right:-60px;background:var(--color-accent-1);opacity:.09"></div><div class="blob" style="width:240px;height:240px;bottom:-60px;left:-40px;background:var(--color-accent-2);opacity:.06"></div></div>
+    <div class="content">
+      <p class="label reveal mb-3">Build scope</p>
+      <h2 class="reveal text-[clamp(2rem,4vw,3rem)] font-extrabold">What gets configured in the month</h2>
+      <div class="mt-8 grid grid-cols-2 gap-6">
+        <div class="metric-card reveal">
+          <h3 class="text-2xl font-bold">Systems</h3>
+          <ul class="mt-4 space-y-3 text-lg text-text-secondary">
+            <li>CRM connection and required properties.</li>
+            <li>Clay or equivalent enrichment table and logic.</li>
+            <li>n8n orchestration for one outbound flow, one inbound flow, one post-call flow.</li>
+            <li>Outreach platform integration for sequence enrollment or direct email send.</li>
+            <li>Reporting dashboard with operational and leadership views.</li>
+          </ul>
+        </div>
+        <div class="metric-card reveal">
+          <h3 class="text-2xl font-bold">Enablement</h3>
+          <ul class="mt-4 space-y-3 text-lg text-text-secondary">
+            <li>Inbox/domain warm-up plan and account structure.</li>
+            <li>Sequence and cadence recommendations.</li>
+            <li>Sales guidelines for SDR + AE workflow.</li>
+            <li>QA checklist for prompts, research quality, and sending controls.</li>
+            <li>Operator handoff documentation so the system can scale after month one.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-slide="10">
+    <div class="gradient-mesh"><div class="blob" style="width:330px;height:330px;top:-80px;right:-60px;background:var(--color-accent-2);opacity:.08"></div><div class="blob" style="width:240px;height:240px;bottom:-50px;left:-30px;background:var(--color-accent-1);opacity:.06"></div></div>
+    <canvas class="particle-canvas-ambient" style="position:absolute;inset:0;z-index:1"></canvas>
+    <div class="content">
+      <p class="label reveal mb-3">Timeline</p>
+      <h2 class="reveal text-[clamp(2rem,4vw,3rem)] font-extrabold">30-day implementation plan</h2>
+      <div class="mt-8 grid grid-cols-4 gap-5">
+        <div class="metric-card reveal"><div class="label">Week 1</div><h3 class="mt-2 text-2xl font-bold">Diagnose + design</h3><p class="mt-3 text-text-secondary">Audit stack, align on ICPs, map data model, finalize tool decisions, and lock success metrics.</p></div>
+        <div class="metric-card reveal"><div class="label">Week 2</div><h3 class="mt-2 text-2xl font-bold">Build outbound</h3><p class="mt-3 text-text-secondary">Implement lead-to-email workflow, prompts, enrichment, sequence connection, and domain warm-up setup.</p></div>
+        <div class="metric-card reveal"><div class="label">Week 3</div><h3 class="mt-2 text-2xl font-bold">Build inbound + post-call</h3><p class="mt-3 text-text-secondary">Deploy routing, draft response logic, CRM updates, post-call summary/action workflow, and playbook drafts.</p></div>
+        <div class="metric-card reveal"><div class="label">Week 4</div><h3 class="mt-2 text-2xl font-bold">Report + handoff</h3><p class="mt-3 text-text-secondary">Dashboard, QA tuning, rep training, documentation, and founder review of next iteration backlog.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-slide="11">
+    <div class="gradient-mesh"><div class="blob" style="width:340px;height:340px;top:-70px;right:-60px;background:var(--color-accent-1);opacity:.08"></div><div class="blob" style="width:230px;height:230px;bottom:-40px;left:-20px;background:var(--color-accent-3);opacity:.06"></div></div>
+    <div class="content">
+      <p class="label reveal mb-3">Measurement</p>
+      <h2 class="reveal text-[clamp(2rem,4vw,3rem)] font-extrabold">What the dashboard should show every day</h2>
+      <div class="mt-8 grid grid-cols-2 gap-7">
+        <div class="metric-card reveal">
+          <h3 class="text-2xl font-bold">Operational metrics</h3>
+          <div class="mt-5 space-y-4">
+            <div><div class="mb-2 flex justify-between text-sm"><span>Workflow success rate</span><span>95%+</span></div><div class="bar-track"><div class="bar-fill" data-width="95"></div></div></div>
+            <div><div class="mb-2 flex justify-between text-sm"><span>Enrichment coverage</span><span>85%+</span></div><div class="bar-track"><div class="bar-fill" data-width="85"></div></div></div>
+            <div><div class="mb-2 flex justify-between text-sm"><span>Sequence enrollment readiness</span><span>80%+</span></div><div class="bar-track"><div class="bar-fill" data-width="80"></div></div></div>
+            <div><div class="mb-2 flex justify-between text-sm"><span>Post-call CRM completion</span><span>90%+</span></div><div class="bar-track"><div class="bar-fill" data-width="90"></div></div></div>
+          </div>
+        </div>
+        <div class="metric-card reveal">
+          <h3 class="text-2xl font-bold">Business metrics</h3>
+          <ul class="mt-5 space-y-3 text-lg text-text-secondary">
+            <li>Accounts processed and contacts created.</li>
+            <li>Email send volume, bounce rate, open rate, and reply rate.</li>
+            <li>Meetings booked by rep, ICP, persona, and source.</li>
+            <li>Inbound speed-to-lead and routing accuracy.</li>
+            <li>Post-call SLA adherence and field completion quality.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-slide="12">
+    <div class="gradient-mesh"><div class="blob" style="width:460px;height:460px;top:-120px;right:-90px;background:var(--color-accent-1);opacity:.15"></div><div class="blob" style="width:320px;height:320px;bottom:-90px;left:-60px;background:var(--color-accent-2);opacity:.12"></div><div class="blob" style="width:210px;height:210px;top:45%;left:18%;background:var(--color-accent-3);opacity:.1"></div></div>
+    <canvas class="particle-canvas" style="position:absolute;inset:0;z-index:1"></canvas>
+    <div class="content text-center">
+      <p class="reveal mb-3 text-sm uppercase tracking-[0.35em] text-text-muted">Engagement structure</p>
+      <h2 class="reveal bg-linear-to-br from-accent-1 via-accent-2 to-accent-1 bg-clip-text text-[clamp(2.5rem,5vw,4.5rem)] font-extrabold tracking-tight text-transparent">Recommended proposal framing</h2>
+      <div class="mx-auto mt-8 grid max-w-5xl grid-cols-3 gap-6 text-left">
+        <div class="metric-card reveal"><div class="label">Offer</div><div class="mt-2 text-2xl font-extrabold">1-month activation</div><p class="mt-3 text-text-secondary">Focused buildout to stand up the GTM architecture and hand Sybill a usable operating system.</p></div>
+        <div class="metric-card reveal"><div class="label">Role</div><div class="mt-2 text-2xl font-extrabold">GTM engineer</div><p class="mt-3 text-text-secondary">End-to-end builder across workflow logic, prompting, CRM design, reporting, and rep enablement.</p></div>
+        <div class="metric-card reveal"><div class="label">Outcome</div><div class="mt-2 text-2xl font-extrabold">Repeatable revenue motion</div><p class="mt-3 text-text-secondary">A foundation that can scale with more reps, more segments, and more automation later.</p></div>
+      </div>
+      <p class="reveal mx-auto mt-8 max-w-3xl text-xl text-text-secondary">Position this as a fast, founder-friendly build sprint: not a strategy memo, but a working GTM system.</p>
+    </div>
+  </div>
+</div>
+<div class="nav-controls">
+  <button class="nav-btn" onclick="changeSlide(-1)">&#8249;</button>
+  <div class="slide-dots" id="dots"></div>
+  <button class="nav-btn" onclick="changeSlide(1)">&#8250;</button>
+  <span class="slide-counter" id="counter">1 / 12</span>
+</div>
+<script>
+let current = 1;
+const total = document.querySelectorAll('.slide').length;
+const dotsContainer = document.getElementById('dots');
+const counter = document.getElementById('counter');
+for (let i = 1; i <= total; i++) { const dot = document.createElement('div'); dot.className = 'dot' + (i === 1 ? ' active' : ''); dot.onclick = () => goToSlide(i); dotsContainer.appendChild(dot); }
+function goToSlide(n){ const prev=document.querySelector('.slide.active'); const next=document.querySelector(`.slide[data-slide="${n}"]`); if(prev) prev.classList.remove('active'); if(next){ next.classList.add('active'); animateSlide(next);} current=n; updateNav(); }
+function changeSlide(dir){ let next=current+dir; if(next<1) next=total; if(next>total) next=1; goToSlide(next); }
+function updateNav(){ document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active', i+1===current)); counter.textContent=current+' / '+total; }
+document.addEventListener('keydown',(e)=>{ if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();changeSlide(1);} if(e.key==='ArrowLeft'){e.preventDefault();changeSlide(-1);} });
+let touchStartX=0; document.addEventListener('touchstart',(e)=>{touchStartX=e.touches[0].clientX;}); document.addEventListener('touchend',(e)=>{const diff=touchStartX-e.changedTouches[0].clientX; if(Math.abs(diff)>50) changeSlide(diff>0?1:-1);});
+function animateSlide(slide){ slide.querySelectorAll('.reveal').forEach((el,i)=>{ el.style.transition='none'; el.style.opacity='0'; el.style.transform='translateY(20px)'; el.offsetHeight; const delay=i*0.08; el.style.transition=`opacity .35s ease ${delay}s, transform .35s ease ${delay}s`; el.style.opacity='1'; el.style.transform='translateY(0px)'; }); animateSlideEffects(slide); }
+function animateSlideEffects(slide){ slide.querySelectorAll('.bar-fill:not(.fill-init)').forEach((bar,i)=>{ bar.classList.add('fill-init'); bar.style.width='0%'; bar.style.transition=`width .6s ease ${i*0.08}s`; bar.offsetHeight; bar.style.width=bar.dataset.width+'%'; }); }
+document.addEventListener('mousemove',(e)=>{ const spotlight=document.querySelector('.mouse-spotlight'); if(spotlight){ spotlight.style.background=`radial-gradient(600px circle at ${e.clientX}px ${e.clientY}px, rgba(29,212,195,0.06), transparent 40%)`; }});
+window.initParticles=function(canvas, options){ if(!canvas) return; const ctx=canvas.getContext('2d'); canvas.width=canvas.offsetWidth; canvas.height=canvas.offsetHeight; const interactive=options.interactive!==false; const count=options.count || (interactive?55:18); let mx=-1000,my=-1000; const particles=Array.from({length:count},()=>({x:Math.random()*canvas.width,y:Math.random()*canvas.height,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,size:Math.random()*2.5+.8,alpha:Math.random()*.35+.1})); if(interactive){ canvas.addEventListener('mousemove',(e)=>{const rect=canvas.getBoundingClientRect(); mx=e.clientX-rect.left; my=e.clientY-rect.top;}); canvas.addEventListener('mouseleave',()=>{mx=-1000;my=-1000;}); }
+(function animate(){ ctx.clearRect(0,0,canvas.width,canvas.height); particles.forEach(p=>{ if(interactive){ const dx=p.x-mx, dy=p.y-my, dist=Math.sqrt(dx*dx+dy*dy); if(dist<120){ const force=(120-dist)/120*2; p.vx+=(dx/dist)*force*0.1; p.vy+=(dy/dist)*force*0.1; } } p.vx*=.98; p.vy*=.98; p.x+=p.vx; p.y+=p.vy; if(p.x<0) p.x=canvas.width; if(p.x>canvas.width) p.x=0; if(p.y<0) p.y=canvas.height; if(p.y>canvas.height) p.y=0; ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fillStyle=`rgba(29,212,195,${p.alpha})`; ctx.fill(); }); requestAnimationFrame(animate); })(); }
+document.querySelectorAll('.particle-canvas').forEach(c=>window.initParticles(c,{interactive:true,count:55}));
+document.querySelectorAll('.particle-canvas-ambient').forEach(c=>window.initParticles(c,{interactive:false,count:18}));
+try { animateSlide(document.querySelector('.slide.active')); } catch(e) {}
+</script>
+</body>
+</html>

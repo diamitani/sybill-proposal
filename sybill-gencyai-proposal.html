@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Architecture Deployment: Sybill GTM System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fafafa;
+      --surface: #ffffff;
+      --ink: #111111;
+      --ink-muted: #666666;
+      --ink-lighter: #888888;
+      --border: #eaeaea;
+      --border-hover: #cccccc;
+      --accent: #000000;
+      --accent-muted: rgba(0,0,0,0.05);
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      padding: 40px 20px 80px;
+    }
+
+    a { color: var(--ink); text-decoration: none; }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 60px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 40px;
+    }
+
+    .header-left {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .brand-logos {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .brand-logos img {
+      height: 32px;
+      border-radius: 6px;
+    }
+
+    .brand-logos .divider {
+      color: var(--border-hover);
+      font-family: var(--font-mono);
+    }
+
+    .title {
+      font-size: 24px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--ink-muted);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+      background: var(--accent-muted);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--ink);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    section {
+      margin-bottom: 48px;
+    }
+
+    .section-header {
+      margin-bottom: 24px;
+    }
+
+    .section-num {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--ink-lighter);
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    h2 {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin-bottom: 12px;
+    }
+
+    p {
+      color: var(--ink-muted);
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 16px;
+      transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .card:hover {
+      box-shadow: var(--shadow-md);
+      border-color: var(--border-hover);
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-title span {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--ink-lighter);
+    }
+
+    .spec-group {
+      margin-bottom: 16px;
+    }
+    
+    .spec-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .spec-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--ink-lighter);
+      margin-bottom: 4px;
+    }
+
+    .spec-value {
+      font-size: 14px;
+      color: var(--ink);
+    }
+
+    ul.technical-list {
+      list-style: none;
+      font-size: 14px;
+      color: var(--ink);
+    }
+
+    ul.technical-list li {
+      position: relative;
+      padding-left: 16px;
+      margin-bottom: 8px;
+    }
+
+    ul.technical-list li::before {
+      content: "→";
+      position: absolute;
+      left: 0;
+      color: var(--ink-lighter);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      top: 2px;
+    }
+
+    .code-block {
+      background: #f4f4f4;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--ink);
+      overflow-x: auto;
+      margin-top: 12px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .cta-container {
+      margin-top: 60px;
+      padding-top: 40px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: var(--ink);
+      color: var(--surface);
+      border: 1px solid var(--ink);
+    }
+
+    .btn-primary:hover {
+      background: #333;
+      border-color: #333;
+    }
+
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--ink);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: #f9f9f9;
+      border-color: var(--border-hover);
+    }
+
+    @media (max-width: 640px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      header { flex-direction: column; gap: 20px; }
+      .cta-container { flex-direction: column; align-items: stretch; gap: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <header>
+      <div class="header-left">
+        <div class="brand-logos">
+          <img src="https://media.licdn.com/dms/image/v2/C560BAQFfi5hDhomRWg/company-logo_200_200/company-logo_200_200/0/1630672218972/sybill_logo?e=1779321600&v=beta&t=_t60btjtjSs8Nepyq04WktOQ7WKm7P3Yxw8HpMTGyZM" alt="Sybill">
+          <span class="divider">/</span>
+          <img src="GencyAI Products/gency-wordmark.png" alt="GencyAI" style="height: 20px;">
+        </div>
+        <h1 class="title">Revenue Architecture Deployment</h1>
+        <div class="subtitle">Document Ref: SYB-GTM-2026 // Author: Patrick Diamitani</div>
+      </div>
+      <div>
+        <span class="badge">Status: Draft Proposal</span>
+      </div>
+    </header>
+
+    <section>
+      <div class="section-header">
+        <span class="section-num">00 // Executive Summary</span>
+        <h2>System State & Objective</h2>
+        <p>
+          Sybill has achieved 9x revenue growth over the last 9 months. The current sales infrastructure relies on manual effort from 1 SDR and 5 Closers. There is no automated orchestration layer mapping signals to CRM state or outreach logic. 
+        </p>
+        <p>
+          <strong>Objective:</strong> Deploy a multi-agent orchestration layer that eliminates manual triage, automates account enrichment, and integrates Sybill's own intelligence into the post-call execution flow. The system must operate autonomously with deterministic routing rules.
+        </p>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-header">
+        <span class="section-num">01 // Architectural Pipeline</span>
+        <h2>Inbound Triage Engine</h2>
+        <p>An autonomous webhook-to-CRM pipeline that reads raw form data, determines intent via LLM, and alters CRM state without human intervention.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          Module: Inbound Automator
+          <span>n8n → OpenAI/Claude → HubSpot</span>
+        </div>
+        
+        <div class="spec-group">
+          <div class="spec-label">Mechanism</div>
+          <div class="spec-value">
+            <ul class="technical-list">
+              <li>Webhook capture of HubSpot form submissions (<30s latency).</li>
+              <li>LLM agent classifies raw text intent (Sales, Support, Partnership, Career) ignoring faulty form dropdowns.</li>
+              <li>Conditional CRM write-back to update `ai_reason_for_contact` and lifecycle stage.</li>
+              <li>Auto-generation of a consultative, non-salesy draft response appended to the contact record.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="spec-group">
+          <div class="spec-label">Output</div>
+          <div class="spec-value">Zero manual SDR triage hours. 100% routing accuracy to correct rep queues.</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-header">
+        <span class="section-num">02 // Architectural Pipeline</span>
+        <h2>Outbound Prospecting Orchestrator</h2>
+        <p>A scheduled pipeline replacing spreadsheet-based account qualification with automated enrichment and sequencing.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          Module: Signal-to-Sequence
+          <span>Cron → Clay → LLM → Apollo/Resend</span>
+        </div>
+        
+        <div class="spec-group">
+          <div class="spec-label">Mechanism</div>
+          <div class="spec-value">
+            <ul class="technical-list">
+              <li>Daily batch query of target accounts from CRM or signal feeds.</li>
+              <li>Webhook delivery to Clay for parallel enrichment (finding RevOps, VP Sales).</li>
+              <li>ICP execution: Filters out dead accounts, competitors, and low-fit targets.</li>
+              <li>LLM agent synthesizes company data into a "Pain Hypothesis" and drafts sequence logic.</li>
+              <li>Deterministic round-robin assignment to the 5 closers and API sync to the outreach tool.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="spec-group">
+          <div class="spec-label">ICP Logic Sample</div>
+          <div class="code-block">
+            target_criteria:
+              roles: ["RevOps", "VP Sales", "Sales Manager"]
+              competitor_exclusions: ["Gong", "Clari", "Fathom"]
+              growth_signals: ["hiring_sales", "recent_funding"]
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-header">
+        <span class="section-num">03 // Architectural Pipeline</span>
+        <h2>Post-Call Intelligence (Meta-Sybill)</h2>
+        <p>Leveraging Sybill's own meeting outputs to drive downstream execution. Drinking our own champagne.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          Module: Sybill-to-Action
+          <span>Sybill API → Parallel Agents → HubSpot/Drafts</span>
+        </div>
+        
+        <div class="spec-group">
+          <div class="spec-label">Mechanism</div>
+          <div class="spec-value">
+            <ul class="technical-list">
+              <li>Triggered upon Sybill transcript/summary generation.</li>
+              <li>Parallel execution of 4 specialized AI agents against the transcript:</li>
+              <li><strong>Agent 1: Consultative Follow-up:</strong> Drafts reply mapped to specific pain points.</li>
+              <li><strong>Agent 2: Competitor Intel:</strong> Detects Gong/Clari mentions and injects RAG-grounded counter-positioning.</li>
+              <li><strong>Agent 3: CRM Mutation:</strong> Extracts structured notes directly to HubSpot deal fields.</li>
+              <li><strong>Agent 4: Social Extract:</strong> Generates a high-performing LinkedIn post from a call insight.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-header">
+        <span class="section-num">04 // Foundation</span>
+        <h2>System Setup & Playbook</h2>
+        <p>The operational framework required to support the automation engines.</p>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Configuration Layer</div>
+          <ul class="technical-list">
+            <li>HubSpot custom property schemas.</li>
+            <li>Routing rules and owner assignments.</li>
+            <li>n8n/Make workspace orchestration.</li>
+            <li>API keys, sending domains, and environment limits.</li>
+            <li>Reporting dashboards for pipeline observability.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">Playbook Governance</div>
+          <ul class="technical-list">
+            <li>ICP and buying committee matrices.</li>
+            <li>Unique Selling Proposition (USP) vs. legacy tools.</li>
+            <li>Prompt repository (version-controlled).</li>
+            <li>SLA guidelines for rep follow-ups.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-header">
+        <span class="section-num">05 // Deployment</span>
+        <h2>Activation Sprint Economics</h2>
+        <p>Scope, schedule, and investment required for complete integration into the Sybill stack.</p>
+      </div>
+
+      <div class="card" style="border-color: var(--ink);">
+        <div class="spec-group">
+          <div class="spec-label">Investment</div>
+          <div class="title" style="font-family: var(--font-mono); margin: 8px 0;">$20,000 USD</div>
+          <div class="subtitle">Flat fee for complete architecture deployment.</div>
+        </div>
+        
+        <div class="spec-group" style="margin-top: 24px;">
+          <div class="spec-label">Timeline: 4-6 Weeks</div>
+          <ul class="technical-list">
+            <li><strong>Week 1:</strong> CRM data model audit and routing logic definition.</li>
+            <li><strong>Week 2:</strong> Inbound Triage Engine build and test.</li>
+            <li><strong>Week 3:</strong> Outbound Prospecting Orchestrator (Clay/API) integration.</li>
+            <li><strong>Week 4:</strong> Post-Call Intelligence pipeline deployment.</li>
+            <li><strong>Week 5-6:</strong> Prompt tuning, dashboard finalization, and operator handoff.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <div class="cta-container">
+      <div class="header-left" style="gap: 4px;">
+        <strong>Patrick Diamitani</strong>
+        <span class="subtitle">Forward Deployed Engineer // GencyAI</span>
+        <a href="mailto:patrick.diamitani@gmail.com" class="subtitle" style="color: var(--ink);">patrick.diamitani@gmail.com</a>
+      </div>
+      <div style="display: flex; gap: 12px;">
+        <a href="https://calendly.com/diamitani" target="_blank" class="btn btn-secondary">Schedule Technical Review</a>
+        <a href="mailto:patrick.diamitani@gmail.com?subject=Approve%20Sybill%20Deployment" class="btn btn-primary">Initialize Sprint</a>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

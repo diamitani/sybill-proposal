@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Call-to-Revenue™ — GencyAI Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #0F172A 0%, #1E1B4B 100%);
+    color: #E2E8F0;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+  .shell { max-width: 1200px; margin: 0 auto; }
+  .eyebrow {
+    display: inline-block;
+    font-size: 12px; font-weight: 700; letter-spacing: 2px;
+    color: #06B6D4; text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 48px; font-weight: 700; line-height: 1.1;
+    background: linear-gradient(135deg, #6C3AED 0%, #06B6D4 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 16px;
+  }
+  .subtitle { color: #94A3B8; font-size: 18px; margin-bottom: 40px; max-width: 800px; line-height: 1.6; }
+  h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px; font-weight: 700; color: #F1F5F9;
+    margin: 48px 0 20px; padding-left: 16px;
+    border-left: 4px solid #6C3AED;
+  }
+  .diagram-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(108,58,237,0.3);
+    border-radius: 16px;
+    padding: 32px;
+    margin: 24px 0;
+    backdrop-filter: blur(10px);
+  }
+  .mermaid {
+    background: #FFFFFF;
+    border-radius: 12px;
+    padding: 24px;
+    overflow-x: auto;
+  }
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); margin-top: 24px; }
+  .component-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.2s;
+  }
+  .component-card:hover {
+    border-color: #06B6D4;
+    transform: translateY(-2px);
+  }
+  .component-card .num {
+    display: inline-block;
+    font-size: 14px; font-weight: 700;
+    color: #6C3AED;
+    margin-bottom: 8px;
+  }
+  .component-card h3 {
+    font-size: 16px; font-weight: 700;
+    color: #F1F5F9; margin-bottom: 8px;
+  }
+  .component-card p { font-size: 14px; color: #94A3B8; line-height: 1.5; }
+  .flow-step {
+    display: flex; align-items: flex-start; gap: 16px;
+    padding: 16px; margin: 8px 0;
+    background: rgba(108,58,237,0.05);
+    border-left: 3px solid #6C3AED;
+    border-radius: 0 8px 8px 0;
+  }
+  .flow-step .step-num {
+    flex-shrink: 0;
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, #6C3AED, #06B6D4);
+    color: white; font-weight: 700;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  .flow-step .step-body strong { color: #F1F5F9; display: block; margin-bottom: 4px; }
+  .flow-step .step-body span { font-size: 14px; color: #94A3B8; line-height: 1.5; }
+  footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.08); color: #64748B; font-size: 13px; text-align: center; }
+  .summary-box {
+    background: linear-gradient(135deg, rgba(108,58,237,0.1), rgba(6,182,212,0.05));
+    border: 1px solid rgba(108,58,237,0.3);
+    border-radius: 12px;
+    padding: 24px;
+    margin: 24px 0;
+    line-height: 1.7;
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="eyebrow">Post Sales Call Intelligence</div>
+  <h1>Call-to-Revenue™</h1>
+  <p class="subtitle">5 AI agents running in parallel on every sales call transcript — drafting follow-up emails, identifying missed questions, surfacing competitor intel, recommending expansion plays, and generating LinkedIn content.</p>
+
+  <h2>System Architecture</h2>
+  <div class="diagram-card">
+    <div class="mermaid">
+flowchart TD
+    A[HubSpot Meeting Webhook] --> B[Avoma Transcript Polling<br/>retry up to 10x]
+    B --> C{Transcript<br/>Ready?}
+    C -->|No| B
+    C -->|Yes| D[Format Transcript +<br/>Extract Rep Emails]
+    D --> E[Get HubSpot Deal Context<br/>30+ properties]
+    E --> F[Parallel AI Agents]
+    F --> G1[Agent 1<br/>Follow-Up Email]
+    F --> G2[Agent 2<br/>Missed Questions]
+    F --> G3[Agent 3<br/>Competitor Intel]
+    F --> G4[Agent 4<br/>LinkedIn Post]
+    F --> G5[Agent 5<br/>Expansion Analysis]
+    G1 --> H[Azure AI Search<br/>Country RAG]
+    G2 --> H
+    G3 --> I[Azure AI Search<br/>Competitor RAG]
+    H --> J[Format HTML Digest<br/>9 sections]
+    I --> J
+    G4 --> J
+    G5 --> J
+    J --> K[Send Email<br/>Outlook to rep + mgmt]
+    J --> L[Create HubSpot Note<br/>on contact record]
+
+    style A fill:#06B6D4,stroke:#0E7490,color:#fff
+    style F fill:#6C3AED,stroke:#5B21B6,color:#fff
+    style G1 fill:#8B5CF6,stroke:#5B21B6,color:#fff
+    style G2 fill:#8B5CF6,stroke:#5B21B6,color:#fff
+    style G3 fill:#8B5CF6,stroke:#5B21B6,color:#fff
+    style G4 fill:#8B5CF6,stroke:#5B21B6,color:#fff
+    style G5 fill:#8B5CF6,stroke:#5B21B6,color:#fff
+    style H fill:#F59E0B,stroke:#B45309,color:#fff
+    style I fill:#F59E0B,stroke:#B45309,color:#fff
+    style K fill:#10B981,stroke:#047857,color:#fff
+    style L fill:#10B981,stroke:#047857,color:#fff
+    </div>
+  </div>
+
+  <h2>Data Flow</h2>
+  <div>
+    
+      <div class="flow-step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <strong>Call ends</strong>
+          <span>HubSpot meeting webhook fires. Workflow grabs meeting metadata + attendee emails.</span>
+        </div>
+      </div>
+    
+      <div class="flow-step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <strong>Transcript ready</strong>
+          <span>Polls Avoma until transcription_uuid + transcript array are present. Up to 10 retries.</span>
+        </div>
+      </div>
+    
+      <div class="flow-step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <strong>Context loaded</strong>
+          <span>Pulls associated deal from HubSpot. Parses 30+ properties into a clean context object.</span>
+        </div>
+      </div>
+    
+      <div class="flow-step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <strong>5 agents in parallel</strong>
+          <span>Follow-up email, missed questions, competitor intel, LinkedIn post, expansion analysis — all fire simultaneously.</span>
+        </div>
+      </div>
+    
+      <div class="flow-step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <strong>RAG-grounded outputs</strong>
+          <span>Country and competitor agents query Azure AI Search for facts before generating recommendations.</span>
+        </div>
+      </div>
+    
+      <div class="flow-step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <strong>Digest assembled</strong>
+          <span>All outputs merged into a 9-section HTML email with copy/paste-ready content.</span>
+        </div>
+      </div>
+    
+      <div class="flow-step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <strong>Distribution</strong>
+          <span>Email to rep + management cc. Plain-text note created on the HubSpot contact.</span>
+        </div>
+      </div>
+    
+  </div>
+
+  <h2>Components</h2>
+  <div class="grid">
+    
+      <div class="component-card">
+        <div class="num">01</div>
+        <h3>Meeting Webhook</h3>
+        <p>HubSpot meeting completion fires the workflow. Captures meeting timestamp + attendees.</p>
+      </div>
+    
+      <div class="component-card">
+        <div class="num">02</div>
+        <h3>Transcript Polling</h3>
+        <p>Polls Avoma API with retry logic — handles transcript readiness lag gracefully.</p>
+      </div>
+    
+      <div class="component-card">
+        <div class="num">03</div>
+        <h3>Deal Context Extractor</h3>
+        <p>Pulls 30+ HubSpot deal properties. Normalizes into agent-ready stage context.</p>
+      </div>
+    
+      <div class="component-card">
+        <div class="num">04</div>
+        <h3>Agent 1 — Follow-Up Email</h3>
+        <p>Country-grounded consultative email. Maps each country need to Atlas capability.</p>
+      </div>
+    
+      <div class="component-card">
+        <div class="num">05</div>
+        <h3>Agent 2 — Missed Questions</h3>
+        <p>6-category analysis of questions the rep should have asked. Plus country blind spots.</p>
+      </div>
+    
+      <div class="component-card">
+        <div class="num">06</div>
+        <h3>Agent 3 — Competitor Intel</h3>
+        <p>Detects competitors mentioned. Pulls 2–3 fact-based counter-points per competitor from RAG.</p>
+      </div>
+    
+      <div class="component-card">
+        <div class="num">07</div>
+        <h3>Agent 4 — LinkedIn Post</h3>
+        <p>Generates 2026-algorithm-optimized LinkedIn post from a single insight.</p>
+      </div>
+    
+      <div class="component-card">
+        <div class="num">08</div>
+        <h3>Agent 5 — Expansion Analysis</h3>
+        <p>Detects multi-country signals. Recommends TalentEdge follow-on motion when warranted.</p>
+      </div>
+    
+      <div class="component-card">
+        <div class="num">09</div>
+        <h3>RAG Knowledge Base</h3>
+        <p>Azure AI Search with country + product + competitor indexes. Hybrid query.</p>
+      </div>
+    
+      <div class="component-card">
+        <div class="num">10</div>
+        <h3>HTML Digest Builder</h3>
+        <p>Merges all 5 agent outputs into a styled 9-section digest.</p>
+      </div>
+    
+      <div class="component-card">
+        <div class="num">11</div>
+        <h3>Email Distribution</h3>
+        <p>Outlook to rep + management cc.</p>
+      </div>
+    
+      <div class="component-card">
+        <div class="num">12</div>
+        <h3>CRM Note Writer</h3>
+        <p>Plain-text version saved as HubSpot note on the contact record.</p>
+      </div>
+    
+  </div>
+
+  <footer>
+    GencyAI · Agent Development &amp; Workflow Automation · Open this file in any modern browser to interact with the architecture diagram.
+  </footer>
+</div>
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'default',
+    themeVariables: {
+      primaryColor: '#6C3AED',
+      primaryTextColor: '#0F172A',
+      primaryBorderColor: '#6C3AED',
+      lineColor: '#94A3B8',
+      secondaryColor: '#06B6D4',
+      tertiaryColor: '#F1F5F9'
+    },
+    flowchart: { htmlLabels: true, curve: 'basis' }
+  });
+</script>
+</body>
+</html>

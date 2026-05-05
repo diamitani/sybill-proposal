@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Intent-to-Outreach™ — GencyAI Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #0F172A 0%, #1E1B4B 100%);
+    color: #E2E8F0;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+  .shell { max-width: 1200px; margin: 0 auto; }
+  .eyebrow {
+    display: inline-block;
+    font-size: 12px; font-weight: 700; letter-spacing: 2px;
+    color: #06B6D4; text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 48px; font-weight: 700; line-height: 1.1;
+    background: linear-gradient(135deg, #6C3AED 0%, #06B6D4 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 16px;
+  }
+  .subtitle { color: #94A3B8; font-size: 18px; margin-bottom: 40px; max-width: 800px; line-height: 1.6; }
+  h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px; font-weight: 700; color: #F1F5F9;
+    margin: 48px 0 20px; padding-left: 16px;
+    border-left: 4px solid #6C3AED;
+  }
+  .diagram-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(108,58,237,0.3);
+    border-radius: 16px;
+    padding: 32px;
+    margin: 24px 0;
+    backdrop-filter: blur(10px);
+  }
+  .mermaid {
+    background: #FFFFFF;
+    border-radius: 12px;
+    padding: 24px;
+    overflow-x: auto;
+  }
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); margin-top: 24px; }
+  .component-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.2s;
+  }
+  .component-card:hover {
+    border-color: #06B6D4;
+    transform: translateY(-2px);
+  }
+  .component-card .num {
+    display: inline-block;
+    font-size: 14px; font-weight: 700;
+    color: #6C3AED;
+    margin-bottom: 8px;
+  }
+  .component-card h3 {
+    font-size: 16px; font-weight: 700;
+    color: #F1F5F9; margin-bottom: 8px;
+  }
+  .component-card p { font-size: 14px; color: #94A3B8; line-height: 1.5; }
+  .flow-step {
+    display: flex; align-items: flex-start; gap: 16px;
+    padding: 16px; margin: 8px 0;
+    background: rgba(108,58,237,0.05);
+    border-left: 3px solid #6C3AED;
+    border-radius: 0 8px 8px 0;
+  }
+  .flow-step .step-num {
+    flex-shrink: 0;
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, #6C3AED, #06B6D4);
+    color: white; font-weight: 700;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  .flow-step .step-body strong { color: #F1F5F9; display: block; margin-bottom: 4px; }
+  .flow-step .step-body span { font-size: 14px; color: #94A3B8; line-height: 1.5; }
+  footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.08); color: #64748B; font-size: 13px; text-align: center; }
+  .summary-box {
+    background: linear-gradient(135deg, rgba(108,58,237,0.1), rgba(6,182,212,0.05));
+    border: 1px solid rgba(108,58,237,0.3);
+    border-radius: 12px;
+    padding: 24px;
+    margin: 24px 0;
+    line-height: 1.7;
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="eyebrow">Prospecting Automation Engine</div>
+  <h1>Intent-to-Outreach™</h1>
+  <p class="subtitle">An autonomous prospecting engine that pulls intent signals daily, runs them through 8 ICP filters, routes to reps by territory, and ships to enrichment — all before reps log in.</p>
+
+  <h2>System Architecture</h2>
+  <div class="diagram-card">
+    <div class="mermaid">
+flowchart TD
+    A[Schedule Trigger<br/>7am daily] --> B[Set Yesterday Range]
+    B --> C[HubSpot Company Search<br/>ZoomInfo + Factors ABM]
+    C --> D[Split Each Company]
+    D --> E[Filter: less than 2,000 emp]
+    E --> F[Filter: APAC region<br/>3-tier detection]
+    F --> G[Filter: 0 active deals]
+    G --> H[Filter: Lifecycle != customer]
+    H --> I[Filter: Type != Customer]
+    I --> J[Filter: 30 days no activity]
+    J --> K[Filter: Remove competitors<br/>Deel/Remote/Rippling]
+    K --> L[Filter: Schools and Gov<br/>NGOs preserved]
+    L --> M[Round-Robin Assignment<br/>6 territory pods]
+    M --> N[Edit Fields<br/>Normalize payload]
+    N --> O[Clay Webhook<br/>Enrichment]
+    N --> P[n8n Datatable<br/>Audit log]
+
+    style A fill:#06B6D4,stroke:#0E7490,color:#fff
+    style C fill:#F59E0B,stroke:#B45309,color:#fff
+    style M fill:#6C3AED,stroke:#5B21B6,color:#fff
+    style O fill:#10B981,stroke:#047857,color:#fff
+    style P fill:#10B981,stroke:#047857,color:#fff
+    </div>
+  </div>
+
+  <h2>Data Flow</h2>
+  <div>
+    
+      <div class="flow-step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <strong>7am trigger fires</strong>
+          <span>Schedule kicks off — no manual intervention. Workflow self-bootstraps.</span>
+        </div>
+      </div>
+    
+      <div class="flow-step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <strong>Intent capture</strong>
+          <span>Pull every intent-flagged company from yesterday's signals (200+ records typical).</span>
+        </div>
+      </div>
+    
+      <div class="flow-step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <strong>Filter cascade</strong>
+          <span>8 filters in sequence. Each drop is logged. Console output shows what survived and why.</span>
+        </div>
+      </div>
+    
+      <div class="flow-step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <strong>Territory routing</strong>
+          <span>Assign to one of 6 rep pods based on location. Round-robin within multi-rep pods.</span>
+        </div>
+      </div>
+    
+      <div class="flow-step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <strong>Enrichment + audit</strong>
+          <span>Post to Clay (parallel enrichment) and upsert to datatable (audit log) — same payload.</span>
+        </div>
+      </div>
+    
+  </div>
+
+  <h2>Components</h2>
+  <div class="grid">
+    
+      <div class="component-card">
+        <div class="num">01</div>
+        <h3>Schedule Trigger</h3>
+        <p>Daily run at 7am. No human kickoff. Pulls yesterday's intent signals automatically.</p>
+      </div>
+    
+      <div class="component-card">
+        <div class="num">02</div>
+        <h3>Intent Capture</h3>
+        <p>Queries HubSpot for any company hitting ZoomInfo or Factors ABM intent yesterday.</p>
+      </div>
+    
+      <div class="component-card">
+        <div class="num">03</div>
+        <h3>Filter Cascade</h3>
+        <p>8 sequential filters — each does one job. Easy to debug, easy to extend.</p>
+      </div>
+    
+      <div class="component-card">
+        <div class="num">04</div>
+        <h3>APAC Detection</h3>
+        <p>3-tier detection: location fields → domain TLDs → company-name keywords.</p>
+      </div>
+    
+      <div class="component-card">
+        <div class="num">05</div>
+        <h3>Round-Robin Engine</h3>
+        <p>Territory-aware assignment with externalized pod config. 6 pods supported.</p>
+      </div>
+    
+      <div class="component-card">
+        <div class="num">06</div>
+        <h3>Clay Webhook</h3>
+        <p>Posts qualified leads to Clay for people enrichment + outreach automation.</p>
+      </div>
+    
+      <div class="component-card">
+        <div class="num">07</div>
+        <h3>Datatable Audit</h3>
+        <p>Every assignment logged for ops visibility, reporting, and dedup.</p>
+      </div>
+    
+  </div>
+
+  <footer>
+    GencyAI · Agent Development &amp; Workflow Automation · Open this file in any modern browser to interact with the architecture diagram.
+  </footer>
+</div>
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'default',
+    themeVariables: {
+      primaryColor: '#6C3AED',
+      primaryTextColor: '#0F172A',
+      primaryBorderColor: '#6C3AED',
+      lineColor: '#94A3B8',
+      secondaryColor: '#06B6D4',
+      tertiaryColor: '#F1F5F9'
+    },
+    flowchart: { htmlLabels: true, curve: 'basis' }
+  });
+</script>
+</body>
+</html>

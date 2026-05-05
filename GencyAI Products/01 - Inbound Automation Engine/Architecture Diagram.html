@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Inbound Triage™ — GencyAI Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #0F172A 0%, #1E1B4B 100%);
+    color: #E2E8F0;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+  .shell { max-width: 1200px; margin: 0 auto; }
+  .eyebrow {
+    display: inline-block;
+    font-size: 12px; font-weight: 700; letter-spacing: 2px;
+    color: #06B6D4; text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 48px; font-weight: 700; line-height: 1.1;
+    background: linear-gradient(135deg, #6C3AED 0%, #06B6D4 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 16px;
+  }
+  .subtitle { color: #94A3B8; font-size: 18px; margin-bottom: 40px; max-width: 800px; line-height: 1.6; }
+  h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px; font-weight: 700; color: #F1F5F9;
+    margin: 48px 0 20px; padding-left: 16px;
+    border-left: 4px solid #6C3AED;
+  }
+  .diagram-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(108,58,237,0.3);
+    border-radius: 16px;
+    padding: 32px;
+    margin: 24px 0;
+    backdrop-filter: blur(10px);
+  }
+  .mermaid {
+    background: #FFFFFF;
+    border-radius: 12px;
+    padding: 24px;
+    overflow-x: auto;
+  }
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); margin-top: 24px; }
+  .component-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.2s;
+  }
+  .component-card:hover {
+    border-color: #06B6D4;
+    transform: translateY(-2px);
+  }
+  .component-card .num {
+    display: inline-block;
+    font-size: 14px; font-weight: 700;
+    color: #6C3AED;
+    margin-bottom: 8px;
+  }
+  .component-card h3 {
+    font-size: 16px; font-weight: 700;
+    color: #F1F5F9; margin-bottom: 8px;
+  }
+  .component-card p { font-size: 14px; color: #94A3B8; line-height: 1.5; }
+  .flow-step {
+    display: flex; align-items: flex-start; gap: 16px;
+    padding: 16px; margin: 8px 0;
+    background: rgba(108,58,237,0.05);
+    border-left: 3px solid #6C3AED;
+    border-radius: 0 8px 8px 0;
+  }
+  .flow-step .step-num {
+    flex-shrink: 0;
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, #6C3AED, #06B6D4);
+    color: white; font-weight: 700;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  .flow-step .step-body strong { color: #F1F5F9; display: block; margin-bottom: 4px; }
+  .flow-step .step-body span { font-size: 14px; color: #94A3B8; line-height: 1.5; }
+  footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.08); color: #64748B; font-size: 13px; text-align: center; }
+  .summary-box {
+    background: linear-gradient(135deg, rgba(108,58,237,0.1), rgba(6,182,212,0.05));
+    border: 1px solid rgba(108,58,237,0.3);
+    border-radius: 12px;
+    padding: 24px;
+    margin: 24px 0;
+    line-height: 1.7;
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="eyebrow">Inbound Automation Engine</div>
+  <h1>Inbound Triage™</h1>
+  <p class="subtitle">An AI agent that classifies, routes, and replies to every form submission in under 30 seconds. Built on n8n + GPT-5 + your CRM, with optional RAG grounding.</p>
+
+  <h2>System Architecture</h2>
+  <div class="diagram-card">
+    <div class="mermaid">
+flowchart TD
+    A[Form Submission<br/>HubSpot/Marketo/etc] --> B[n8n Webhook]
+    B --> C{AI Classification Agent<br/>GPT-5}
+    C -->|Reads message| D[7 Categories]
+    D --> E[Update Reason for Contact<br/>HubSpot]
+    E --> F[Code: Set Target Lifecycle]
+    F --> G{Classification<br/>changed?}
+    G -->|Yes| H[Update Lifecycle Stage<br/>HubSpot]
+    G -->|No| I[Skip write]
+    H --> J{Speak with<br/>Sales?}
+    I --> J
+    J -->|Yes| K[Response Drafting Agent<br/>GPT-5 + RAG]
+    J -->|No| Z[End - routed to<br/>support/HR/PR/etc]
+    K --> L[Azure AI Search<br/>Knowledge Base]
+    L --> K
+    K --> M[Write Draft to CRM<br/>ai_mql_response_1]
+    M --> N[Set ai_processed = true]
+    N --> O[Rep reviews + sends<br/>in <30 seconds]
+
+    style A fill:#06B6D4,stroke:#0E7490,color:#fff
+    style C fill:#6C3AED,stroke:#5B21B6,color:#fff
+    style K fill:#6C3AED,stroke:#5B21B6,color:#fff
+    style L fill:#F59E0B,stroke:#B45309,color:#fff
+    style O fill:#10B981,stroke:#047857,color:#fff
+    style Z fill:#94A3B8,stroke:#475569,color:#fff
+    </div>
+  </div>
+
+  <h2>Data Flow</h2>
+  <div>
+    
+      <div class="flow-step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <strong>Form submission</strong>
+          <span>Prospect fills out a form. Webhook fires in <1 second.</span>
+        </div>
+      </div>
+    
+      <div class="flow-step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <strong>Intent classification</strong>
+          <span>AI reads the actual message and assigns one of 7 categories using priority rules.</span>
+        </div>
+      </div>
+    
+      <div class="flow-step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <strong>CRM hygiene</strong>
+          <span>Reason for contact updated. Lifecycle stage corrected only when needed.</span>
+        </div>
+      </div>
+    
+      <div class="flow-step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <strong>Response drafting</strong>
+          <span>If sales-qualified, AI drafts a brand-correct, country-aware email body.</span>
+        </div>
+      </div>
+    
+      <div class="flow-step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <strong>Rep handoff</strong>
+          <span>Draft lands in CRM. Rep opens HubSpot, reviews, sends. Total time: <30s.</span>
+        </div>
+      </div>
+    
+  </div>
+
+  <h2>Components</h2>
+  <div class="grid">
+    
+      <div class="component-card">
+        <div class="num">01</div>
+        <h3>Webhook Capture</h3>
+        <p>Secure POST endpoint for any form provider. Preserves the full payload end-to-end.</p>
+      </div>
+    
+      <div class="component-card">
+        <div class="num">02</div>
+        <h3>AI Classification Agent</h3>
+        <p>GPT-5 with priority rules. Outputs one of 7 canonical intent categories.</p>
+      </div>
+    
+      <div class="component-card">
+        <div class="num">03</div>
+        <h3>Lifecycle Correction Logic</h3>
+        <p>Conditional CRM writes — only updates when AI corrected the original selection.</p>
+      </div>
+    
+      <div class="component-card">
+        <div class="num">04</div>
+        <h3>Response Drafting Agent</h3>
+        <p>Brand-voice email writer with country handling and calendar CTA enforcement.</p>
+      </div>
+    
+      <div class="component-card">
+        <div class="num">05</div>
+        <h3>Azure AI Search RAG</h3>
+        <p>Optional knowledge-base grounding for product, country, or compliance Q&A.</p>
+      </div>
+    
+      <div class="component-card">
+        <div class="num">06</div>
+        <h3>CRM Write-Back</h3>
+        <p>Drafted email body + processing flag written to custom HubSpot properties.</p>
+      </div>
+    
+  </div>
+
+  <footer>
+    GencyAI · Agent Development &amp; Workflow Automation · Open this file in any modern browser to interact with the architecture diagram.
+  </footer>
+</div>
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'default',
+    themeVariables: {
+      primaryColor: '#6C3AED',
+      primaryTextColor: '#0F172A',
+      primaryBorderColor: '#6C3AED',
+      lineColor: '#94A3B8',
+      secondaryColor: '#06B6D4',
+      tertiaryColor: '#F1F5F9'
+    },
+    flowchart: { htmlLabels: true, curve: 'basis' }
+  });
+</script>
+</body>
+</html>
