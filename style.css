@@ -32,7 +32,8 @@ ul{list-style:none}
 .topbar{position:fixed;top:0;left:0;right:0;z-index:100;backdrop-filter:blur(20px) saturate(1.4);background:rgba(10,10,15,.78);border-bottom:1px solid rgba(255,255,255,.06)}
 .nav{min-height:68px;display:flex;align-items:center;justify-content:space-between;gap:20px}
 .brand{display:flex;align-items:center;gap:10px}
-.brand-icon{flex-shrink:0}
+.brand-logo{height:32px;width:auto;filter:brightness(0) invert(1);opacity:.9;transition:opacity .2s}
+.brand:hover .brand-logo{opacity:1}
 .brand-text small{display:block;font-size:.65rem;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.1em;font-weight:700}
 .brand-text span{font-family:var(--font-d);font-size:1rem;font-weight:700}
 .brand-text b{background:var(--grad-text);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
@@ -189,6 +190,7 @@ ul{list-style:none}
 .cta-section{padding:20px 0 60px}
 .cta-card{padding:48px;border-radius:28px;background:linear-gradient(160deg,rgba(108,58,237,.1),rgba(6,182,212,.06));border:1px solid rgba(108,58,237,.18);text-align:center;box-shadow:var(--glow)}
 .cta-card h2{font-family:var(--font-d);font-size:2rem;font-weight:700;margin-bottom:12px}
+.cta-logo{height:40px;width:auto;filter:brightness(0) invert(1);opacity:.85;margin:0 auto 20px}
 .cta-card>p{color:var(--ink-soft);max-width:60ch;margin:0 auto 24px}
 .cta-actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:24px}
 .contact-stack{display:grid;gap:4px;color:var(--ink-muted);font-size:.88rem}
